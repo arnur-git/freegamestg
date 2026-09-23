@@ -8,7 +8,7 @@ const emptyDb: Database = {
   telegramUsers: [],
   notificationLogs: [],
   giveawayHistory: [],
-  sourceStatus: { epic: { ok: false }, steam: { ok: false }, playstation: { ok: false }, gog: { ok: false }, xbox: { ok: false } },
+  sourceStatus: { epic: { ok: false }, steam: { ok: false }, playstation: { ok: false }, gog: { ok: false }, xbox: { ok: false }, nintendo: { ok: false }, itchio: { ok: false }, ubisoft: { ok: false }, battlenet: { ok: false } },
 };
 
 function ensureFile() {
@@ -53,7 +53,7 @@ export function updateSource(store: Store, status: { ok: boolean; error?: string
 }
 
 export function getUsersForGame(game: Game) {
-  return readDb().telegramUsers.filter((user) => user.subscribed && (game.store === "epic" ? user.epicNotifications : game.store === "steam" ? user.steamNotifications : game.store === "playstation" ? user.playstationNotifications !== false : game.store === "gog" ? user.gogNotifications !== false : user.xboxNotifications !== false));
+  return readDb().telegramUsers.filter((user) => user.subscribed && (user[`${game.store}Notifications` as keyof TelegramUser] !== false));
 }
 
 export function hasSuccessfulNotification(userId: string, gameId: string) {
@@ -81,6 +81,10 @@ export function upsertTelegramUser(input: Partial<TelegramUser> & Pick<TelegramU
     playstationNotifications: input.playstationNotifications ?? existing?.playstationNotifications ?? true,
     gogNotifications: input.gogNotifications ?? existing?.gogNotifications ?? true,
     xboxNotifications: input.xboxNotifications ?? existing?.xboxNotifications ?? true,
+    nintendoNotifications: input.nintendoNotifications ?? existing?.nintendoNotifications ?? true,
+    itchioNotifications: input.itchioNotifications ?? existing?.itchioNotifications ?? true,
+    ubisoftNotifications: input.ubisoftNotifications ?? existing?.ubisoftNotifications ?? true,
+    battlenetNotifications: input.battlenetNotifications ?? existing?.battlenetNotifications ?? true,
     newOnly: input.newOnly ?? existing?.newOnly ?? true,
     endingSoon: input.endingSoon ?? existing?.endingSoon ?? false,
     createdAt: existing?.createdAt ?? now,

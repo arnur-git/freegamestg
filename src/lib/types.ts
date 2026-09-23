@@ -1,4 +1,4 @@
-export type Store = "epic" | "steam" | "playstation" | "gog" | "xbox";
+export type Store = "epic" | "steam" | "playstation" | "gog" | "xbox" | "nintendo" | "itchio" | "ubisoft" | "battlenet";
 
 export type Game = {
   id: string;
@@ -27,6 +27,10 @@ export type TelegramUser = {
   playstationNotifications: boolean;
   gogNotifications: boolean;
   xboxNotifications: boolean;
+  nintendoNotifications: boolean;
+  itchioNotifications: boolean;
+  ubisoftNotifications: boolean;
+  battlenetNotifications: boolean;
   newOnly: boolean;
   endingSoon: boolean;
   createdAt: string;

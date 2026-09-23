@@ -15,17 +15,17 @@ async function telegram(method: string, body: Record<string, unknown>) {
 
 function message(game: Game) {
   const end = new Date(game.giveawayEnd).toLocaleDateString("ru-RU");
-  const storeName = game.store === "epic" ? "Epic Games Store" : game.store === "steam" ? "Steam" : game.store === "playstation" ? "PlayStation" : game.store === "gog" ? "GOG" : "Xbox";
+  const storeName = { epic: "Epic Games Store", steam: "Steam", playstation: "PlayStation", gog: "GOG", xbox: "Xbox", nintendo: "Nintendo", itchio: "itch.io", ubisoft: "Ubisoft", battlenet: "Battle.net" }[game.store];
   return `🎁 *НОВАЯ БЕСПЛАТНАЯ ИГРА!*\n\n🎮 *${game.title}*\n🏪 ${storeName}\n💰 Обычная цена: $${game.normalPrice.toFixed(2)}\n🆓 *СЕЙЧАС БЕСПЛАТНО*\n⏰ До: ${end}`;
 }
 
 function dealsKeyboard() {
-  return { inline_keyboard: [[{ text: "🎮 Раздачи Steam", callback_data: "deals_steam" }, { text: "🟢 Раздачи Epic", callback_data: "deals_epic" }], [{ text: "🎮 Раздачи PlayStation", callback_data: "deals_playstation" }], [{ text: "🟡 Раздачи GOG", callback_data: "deals_gog" }, { text: "🟢 Раздачи Xbox", callback_data: "deals_xbox" }], [{ text: "🔥 Смотреть все", callback_data: "deals_all" }]] };
+  return { inline_keyboard: [[{ text: "🎮 Steam", callback_data: "deals_steam" }, { text: "🟢 Epic", callback_data: "deals_epic" }], [{ text: "🎮 PlayStation", callback_data: "deals_playstation" }, { text: "🔴 Nintendo", callback_data: "deals_nintendo" }], [{ text: "🟡 GOG", callback_data: "deals_gog" }, { text: "🟢 Xbox", callback_data: "deals_xbox" }], [{ text: "🕹 itch.io", callback_data: "deals_itchio" }], [{ text: "🔵 Ubisoft", callback_data: "deals_ubisoft" }, { text: "🟠 Battle.net", callback_data: "deals_battlenet" }], [{ text: "🔥 Смотреть все", callback_data: "deals_all" }]] };
 }
 
 function dealsText(games: Game[], store?: string) {
   const filtered = store && store !== "all" ? games.filter((game) => game.store === store) : games;
-  return filtered.length ? filtered.slice(0, 10).map((game) => `🎮 ${game.title}\n🏪 ${game.store === "epic" ? "Epic Games Store" : game.store === "steam" ? "Steam" : game.store === "playstation" ? "PlayStation" : game.store === "gog" ? "GOG" : "Xbox"}\n${game.storeUrl}`).join("\n\n") : "Сейчас активных раздач этого магазина нет.";
+  return filtered.length ? filtered.slice(0, 10).map((game) => `🎮 ${game.title}\n🏪 ${{ epic: "Epic Games Store", steam: "Steam", playstation: "PlayStation", gog: "GOG", xbox: "Xbox", nintendo: "Nintendo", itchio: "itch.io", ubisoft: "Ubisoft", battlenet: "Battle.net" }[game.store]}\n${game.storeUrl}`).join("\n\n") : "Сейчас активных раздач этого магазина нет.";
 }
 
 export async function sendGameNotification(game: Game) {
@@ -51,7 +51,7 @@ export async function handleUpdate(update: any, games: Game[]) {
   if (update.callback_query) {
     const callback = update.callback_query;
     const telegramId = String(callback.message?.chat?.id ?? callback.from?.id);
-    const store = callback.data === "deals_steam" ? "steam" : callback.data === "deals_epic" ? "epic" : callback.data === "deals_playstation" ? "playstation" : callback.data === "deals_gog" ? "gog" : callback.data === "deals_xbox" ? "xbox" : callback.data === "deals_all" ? "all" : undefined;
+    const store = callback.data?.startsWith("deals_") ? callback.data.slice(7) : undefined;
     if (store) {
       await telegram("answerCallbackQuery", { callback_query_id: callback.id });
       await telegram("sendMessage", { chat_id: telegramId, text: dealsText(games, store), reply_markup: dealsKeyboard() });
@@ -75,5 +75,5 @@ export async function handleUpdate(update: any, games: Game[]) {
 
 function settingsKeyboard(user: TelegramUser) {
   const mark = (value: boolean) => value ? "✅" : "◻️";
-  return { inline_keyboard: [[{ text: `${mark(user.epicNotifications)} Epic Games`, callback_data: "toggle_epic" }, { text: `${mark(user.steamNotifications)} Steam`, callback_data: "toggle_steam" }], [{ text: `${mark(user.playstationNotifications)} PlayStation`, callback_data: "toggle_playstation" }], [{ text: `${mark(user.newOnly)} Только новые`, callback_data: "toggle_new" }, { text: `${mark(user.endingSoon)} Скоро заканчиваются`, callback_data: "toggle_ending" }]] };
+  return { inline_keyboard: [[{ text: `${mark(user.epicNotifications)} Epic`, callback_data: "toggle_epic" }, { text: `${mark(user.steamNotifications)} Steam`, callback_data: "toggle_steam" }], [{ text: `${mark(user.playstationNotifications)} PlayStation`, callback_data: "toggle_playstation" }, { text: `${mark(user.nintendoNotifications)} Nintendo`, callback_data: "toggle_nintendo" }], [{ text: `${mark(user.gogNotifications)} GOG`, callback_data: "toggle_gog" }, { text: `${mark(user.xboxNotifications)} Xbox`, callback_data: "toggle_xbox" }], [{ text: `${mark(user.itchioNotifications)} itch.io`, callback_data: "toggle_itchio" }], [{ text: `${mark(user.ubisoftNotifications)} Ubisoft`, callback_data: "toggle_ubisoft" }, { text: `${mark(user.battlenetNotifications)} Battle.net`, callback_data: "toggle_battlenet" }]] };
 }

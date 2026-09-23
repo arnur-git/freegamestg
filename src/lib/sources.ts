@@ -5,7 +5,7 @@ const now = () => new Date().toISOString();
 
 function gamerPowerGames(payload: any, store: Store): Game[] {
   return (Array.isArray(payload) ? payload : []).flatMap((item: any) => {
-    const platformName = store === "epic" ? "Epic Games Store" : store === "steam" ? "Steam" : store === "playstation" ? "Playstation" : store === "gog" ? "GOG" : "Xbox";
+    const platformName = store === "epic" ? "Epic Games Store" : store === "steam" ? "Steam" : store === "playstation" ? "Playstation" : store === "gog" ? "GOG" : store === "xbox" ? "Xbox" : store === "nintendo" ? "Switch" : store === "itchio" ? "itch.io" : store === "ubisoft" ? "Ubisoft" : "Battle.net";
     if (!item.id || item.status !== "Active" || item.type?.toLowerCase() !== "game" || !item.end_date || item.end_date === "N/A" || !String(item.platforms ?? "").toLowerCase().includes(platformName.toLowerCase())) return [];
     const title = String(item.title ?? "").replace(/\s*\((Epic Games|Steam)\)\s*Giveaway\s*$/i, "").trim();
     const price = Number(String(item.worth ?? "").replace(/[^0-9.]/g, "")) || 0;
@@ -33,7 +33,7 @@ async function getJson(url: string) {
 
 export async function syncStore(store: Store) {
   try {
-    const platforms = store === "epic" ? ["epic-games-store"] : store === "steam" ? ["steam"] : store === "playstation" ? ["ps4", "ps5"] : store === "gog" ? ["gog"] : ["xbox-one", "xbox-series-xs"];
+    const platforms = store === "epic" ? ["epic-games-store"] : store === "steam" ? ["steam"] : store === "playstation" ? ["ps4", "ps5"] : store === "gog" ? ["gog"] : store === "xbox" ? ["xbox-one", "xbox-series-xs"] : store === "nintendo" ? ["switch"] : store === "itchio" ? ["itchio"] : store === "ubisoft" ? ["ubisoft"] : ["battle-net"];
     const payloads = await Promise.all(platforms.map((platform) => getJson(`https://www.gamerpower.com/api/giveaways?platform=${platform}&type=game`)));
     const payload = payloads.flat();
     const games = gamerPowerGames(payload, store);
@@ -47,6 +47,7 @@ export async function syncStore(store: Store) {
 }
 
 export async function syncAll() {
-  const [epic, steam, playstation, gog, xbox] = await Promise.all([syncStore("epic"), syncStore("steam"), syncStore("playstation"), syncStore("gog"), syncStore("xbox")]);
-  return { epic, steam, playstation, gog, xbox };
+  const stores: Store[] = ["epic", "steam", "playstation", "gog", "xbox", "nintendo", "itchio", "ubisoft", "battlenet"];
+  const results = await Promise.all(stores.map((store) => syncStore(store)));
+  return Object.fromEntries(stores.map((store, index) => [store, results[index]]));
 }

@@ -21,6 +21,10 @@ STORE_NAMES = {
     "playstation": "PlayStation",
     "gog": "GOG",
     "xbox": "Xbox",
+    "nintendo": "Nintendo",
+    "itchio": "itch.io",
+    "ubisoft": "Ubisoft",
+    "battlenet": "Battle.net",
 }
 STORE_PLATFORMS = {
     "steam": ["steam"],
@@ -28,6 +32,10 @@ STORE_PLATFORMS = {
     "playstation": ["ps4", "ps5"],
     "gog": ["gog"],
     "xbox": ["xbox-one", "xbox-series-xs"],
+    "nintendo": ["switch"],
+    "itchio": ["itchio"],
+    "ubisoft": ["ubisoft"],
+    "battlenet": ["battle-net"],
 }
 
 
@@ -62,7 +70,9 @@ def db() -> sqlite3.Connection:
             telegram_id TEXT PRIMARY KEY, username TEXT, subscribed INTEGER NOT NULL DEFAULT 1,
             steam INTEGER NOT NULL DEFAULT 1, epic INTEGER NOT NULL DEFAULT 1,
             playstation INTEGER NOT NULL DEFAULT 1, gog INTEGER NOT NULL DEFAULT 1,
-            xbox INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+            xbox INTEGER NOT NULL DEFAULT 1, nintendo INTEGER NOT NULL DEFAULT 1,
+            itchio INTEGER NOT NULL DEFAULT 1, ubisoft INTEGER NOT NULL DEFAULT 1,
+            battlenet INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS notification_logs (
             telegram_id TEXT NOT NULL, game_id TEXT NOT NULL, status TEXT NOT NULL,
@@ -71,6 +81,10 @@ def db() -> sqlite3.Connection:
         );
         """
     )
+    existing_columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
+    for column in ("nintendo", "itchio", "ubisoft", "battlenet"):
+        if column not in existing_columns:
+            connection.execute(f"ALTER TABLE users ADD COLUMN {column} INTEGER NOT NULL DEFAULT 1")
     return connection
 
 
@@ -167,6 +181,8 @@ def keyboard() -> dict[str, Any]:
         [{"text": "🎮 Раздачи Steam", "callback_data": "deals:steam"}, {"text": "🟢 Раздачи Epic", "callback_data": "deals:epic"}],
         [{"text": "🎮 PlayStation", "callback_data": "deals:playstation"}],
         [{"text": "🟡 GOG", "callback_data": "deals:gog"}, {"text": "🟢 Xbox", "callback_data": "deals:xbox"}],
+        [{"text": "🔴 Nintendo", "callback_data": "deals:nintendo"}, {"text": "🕹 itch.io", "callback_data": "deals:itchio"}],
+        [{"text": "🔵 Ubisoft", "callback_data": "deals:ubisoft"}, {"text": "🟠 Battle.net", "callback_data": "deals:battlenet"}],
         [{"text": "🔥 Смотреть все", "callback_data": "deals:all"}],
     ]}
 
@@ -177,6 +193,8 @@ def settings_keyboard(user: sqlite3.Row) -> dict[str, Any]:
         [{"text": f"{mark(user['steam'])} Steam", "callback_data": "toggle:steam"}, {"text": f"{mark(user['epic'])} Epic", "callback_data": "toggle:epic"}],
         [{"text": f"{mark(user['playstation'])} PlayStation", "callback_data": "toggle:playstation"}],
         [{"text": f"{mark(user['gog'])} GOG", "callback_data": "toggle:gog"}, {"text": f"{mark(user['xbox'])} Xbox", "callback_data": "toggle:xbox"}],
+        [{"text": f"{mark(user['nintendo'])} Nintendo", "callback_data": "toggle:nintendo"}, {"text": f"{mark(user['itchio'])} itch.io", "callback_data": "toggle:itchio"}],
+        [{"text": f"{mark(user['ubisoft'])} Ubisoft", "callback_data": "toggle:ubisoft"}, {"text": f"{mark(user['battlenet'])} Battle.net", "callback_data": "toggle:battlenet"}],
     ]}
 
 
