@@ -237,7 +237,7 @@ def handle_update(update: dict[str, Any]) -> None:
     user = save_user(chat_id, message.get("from", {}).get("username"))
     command = text.strip().split()[0].split("@", 1)[0].lower()
     if command == "/start":
-        telegram("sendMessage", {"chat_id": chat_id, "text": "🎮 FreeGame Radar\n\nВыберите актуальные раздачи:", "reply_markup": keyboard()})
+        telegram("sendMessage", {"chat_id": chat_id, "text": "🎮 FreeGame Radar\nДля геймеров, от геймеров.\n\nВыберите актуальные раздачи:", "reply_markup": keyboard()})
     elif command == "/stop":
         save_user(chat_id, user["username"], False)
         telegram("sendMessage", {"chat_id": chat_id, "text": "🔕 Уведомления отключены."})
@@ -248,7 +248,7 @@ def handle_update(update: dict[str, Any]) -> None:
     elif command == "/settings":
         telegram("sendMessage", {"chat_id": chat_id, "text": "Настройки уведомлений:", "reply_markup": settings_keyboard(user)})
     elif command == "/help":
-        telegram("sendMessage", {"chat_id": chat_id, "text": "🎮 FreeGame Radar\n\n/start — главное меню\n/stop — отключить уведомления\n/status — статус подписки\n/settings — магазины для уведомлений\n/deals — все актуальные раздачи\n/help — помощь"})
+        telegram("sendMessage", {"chat_id": chat_id, "text": "🎮 FreeGame Radar\nДля геймеров, от геймеров.\n\n/start — главное меню\n/stop — отключить уведомления\n/status — статус подписки\n/settings — магазины для уведомлений\n/deals — все актуальные раздачи\n/help — помощь"})
     else:
         telegram("sendMessage", {"chat_id": chat_id, "text": "Неизвестная команда. Используй /help"})
 
