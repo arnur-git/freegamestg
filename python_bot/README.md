@@ -14,7 +14,7 @@ nano .env.local
 python python_bot/freegame_bot.py
 ```
 
-В `.env.local` укажи токен без кавычек:
+В `python_bot/.env.local` укажи токен без кавычек:
 
 ```env
 TELEGRAM_BOT_TOKEN=токен_от_BotFather

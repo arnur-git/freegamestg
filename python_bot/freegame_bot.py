@@ -14,7 +14,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "python_bot" / "freegame_radar.sqlite3"
-POLL_INTERVAL = 7
+DEFAULT_POLL_INTERVAL = 7
 STORE_NAMES = {
     "steam": "Steam",
     "epic": "Epic Games Store",
@@ -32,15 +32,15 @@ STORE_PLATFORMS = {
 
 
 def load_env() -> None:
-    env_file = ROOT / ".env.local"
-    if not env_file.exists():
-        return
-    for raw_line in env_file.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+    for env_file in (ROOT / "python_bot" / ".env.local", ROOT / ".env.local"):
+        if not env_file.exists():
             continue
-        key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        for raw_line in env_file.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
 def utc_now() -> str:
@@ -280,6 +280,7 @@ def notify_new_games(games: list[dict[str, Any]]) -> None:
 
 def main() -> None:
     load_env()
+    poll_interval = max(1, int(os.environ.get("POLL_INTERVAL_SECONDS", DEFAULT_POLL_INTERVAL)))
     if not os.environ.get("TELEGRAM_BOT_TOKEN"):
         raise SystemExit("Добавь TELEGRAM_BOT_TOKEN в .env.local")
     telegram("setMyCommands", {"commands": [{"command": "start", "description": "Главное меню"}, {"command": "stop", "description": "Отключить уведомления"}, {"command": "status", "description": "Статус подписки"}, {"command": "settings", "description": "Настройки магазинов"}, {"command": "deals", "description": "Актуальные раздачи"}, {"command": "help", "description": "Помощь"}]})
@@ -294,7 +295,7 @@ def main() -> None:
                 handle_update(update)
         except Exception as error:
             print(f"Worker error: {error}")
-        time.sleep(POLL_INTERVAL)
+        time.sleep(poll_interval)
 
 
 if __name__ == "__main__":
