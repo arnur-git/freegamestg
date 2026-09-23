@@ -36,6 +36,8 @@ yarn-error.log*
 # local database and user data
 /data/db.json
 /python_bot/*.sqlite3
+__pycache__/
+*.py[cod]
 
 # vercel
 .vercel
