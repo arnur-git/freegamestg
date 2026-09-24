@@ -18,9 +18,13 @@ async function cycle() {
   cycleRunning = true;
   try {
     const result = await syncAll();
-    for (const game of [...result.epic.created, ...result.steam.created]) await sendGameNotification(game);
+    const stores = Object.entries(result);
+    for (const [, storeResult] of stores) {
+      for (const game of storeResult.created) await sendGameNotification(game);
+    }
     await pollTelegram();
-    console.log(`[${new Date().toISOString()}] sync epic=${result.epic.games.length} steam=${result.steam.games.length}`);
+    const counts = stores.map(([store, storeResult]) => `${store}=${storeResult.games.length}`).join(" ");
+    console.log(`[${new Date().toISOString()}] sync ${counts}`);
   } finally {
     cycleRunning = false;
   }
