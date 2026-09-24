@@ -94,3 +94,8 @@ export function upsertTelegramUser(input: Partial<TelegramUser> & Pick<TelegramU
   writeDb(db);
   return user;
 }
+
+export function toggleTelegramSubscription(telegramId: string) {
+  const user = upsertTelegramUser({ telegramId });
+  return upsertTelegramUser({ telegramId, subscribed: !user.subscribed });
+}

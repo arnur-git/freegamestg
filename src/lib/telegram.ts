@@ -1,4 +1,4 @@
-import { addNotificationLog, getUsersForGame, hasSuccessfulNotification, upsertTelegramUser } from "./db.ts";
+import { addNotificationLog, getUsersForGame, hasSuccessfulNotification, toggleTelegramSubscription, upsertTelegramUser } from "./db.ts";
 import type { Game, TelegramUser } from "./types.ts";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -51,6 +51,12 @@ export async function handleUpdate(update: any, games: Game[]) {
   if (update.callback_query) {
     const callback = update.callback_query;
     const telegramId = String(callback.message?.chat?.id ?? callback.from?.id);
+    if (callback.data === "toggle_subscription") {
+      const user = toggleTelegramSubscription(telegramId);
+      await telegram("answerCallbackQuery", { callback_query_id: callback.id, text: user.subscribed ? "Уведомления включены" : "Уведомления выключены" });
+      await telegram("editMessageReplyMarkup", { chat_id: telegramId, message_id: callback.message?.message_id, reply_markup: settingsKeyboard(user) });
+      return;
+    }
     const store = callback.data?.startsWith("deals_") ? callback.data.slice(7) : undefined;
     if (store) {
       await telegram("answerCallbackQuery", { callback_query_id: callback.id });
@@ -75,5 +81,5 @@ export async function handleUpdate(update: any, games: Game[]) {
 
 function settingsKeyboard(user: TelegramUser) {
   const mark = (value: boolean) => value ? "✅" : "◻️";
-  return { inline_keyboard: [[{ text: `${mark(user.epicNotifications)} Epic`, callback_data: "toggle_epic" }, { text: `${mark(user.steamNotifications)} Steam`, callback_data: "toggle_steam" }], [{ text: `${mark(user.playstationNotifications)} PlayStation`, callback_data: "toggle_playstation" }, { text: `${mark(user.nintendoNotifications)} Nintendo`, callback_data: "toggle_nintendo" }], [{ text: `${mark(user.gogNotifications)} GOG`, callback_data: "toggle_gog" }, { text: `${mark(user.xboxNotifications)} Xbox`, callback_data: "toggle_xbox" }], [{ text: `${mark(user.itchioNotifications)} itch.io`, callback_data: "toggle_itchio" }], [{ text: `${mark(user.ubisoftNotifications)} Ubisoft`, callback_data: "toggle_ubisoft" }, { text: `${mark(user.battlenetNotifications)} Battle.net`, callback_data: "toggle_battlenet" }]] };
+  return { inline_keyboard: [[{ text: `${user.subscribed ? "🔔" : "🔕"} Уведомления: ${user.subscribed ? "ВКЛ" : "ВЫКЛ"}`, callback_data: "toggle_subscription" }], [{ text: `${mark(user.epicNotifications)} Epic`, callback_data: "toggle_epic" }, { text: `${mark(user.steamNotifications)} Steam`, callback_data: "toggle_steam" }], [{ text: `${mark(user.playstationNotifications)} PlayStation`, callback_data: "toggle_playstation" }, { text: `${mark(user.nintendoNotifications)} Nintendo`, callback_data: "toggle_nintendo" }], [{ text: `${mark(user.gogNotifications)} GOG`, callback_data: "toggle_gog" }, { text: `${mark(user.xboxNotifications)} Xbox`, callback_data: "toggle_xbox" }], [{ text: `${mark(user.itchioNotifications)} itch.io`, callback_data: "toggle_itchio" }], [{ text: `${mark(user.ubisoftNotifications)} Ubisoft`, callback_data: "toggle_ubisoft" }, { text: `${mark(user.battlenetNotifications)} Battle.net`, callback_data: "toggle_battlenet" }]] };
 }

@@ -190,6 +190,7 @@ def keyboard() -> dict[str, Any]:
 def settings_keyboard(user: sqlite3.Row) -> dict[str, Any]:
     mark = lambda enabled: "✅" if enabled else "◻️"
     return {"inline_keyboard": [
+        [{"text": f"{'🔔' if user['subscribed'] else '🔕'} Уведомления: {'ВКЛ' if user['subscribed'] else 'ВЫКЛ'}", "callback_data": "toggle:subscription"}],
         [{"text": f"{mark(user['steam'])} Steam", "callback_data": "toggle:steam"}, {"text": f"{mark(user['epic'])} Epic", "callback_data": "toggle:epic"}],
         [{"text": f"{mark(user['playstation'])} PlayStation", "callback_data": "toggle:playstation"}],
         [{"text": f"{mark(user['gog'])} GOG", "callback_data": "toggle:gog"}, {"text": f"{mark(user['xbox'])} Xbox", "callback_data": "toggle:xbox"}],
@@ -238,7 +239,17 @@ def handle_update(update: dict[str, Any]) -> None:
         elif data.startswith("toggle:"):
             telegram_id = str(callback.get("message", {}).get("chat", {}).get("id", callback["from"]["id"]))
             store = data.split(":", 1)[1]
-            if store in STORE_NAMES:
+            if store == "subscription":
+                connection = db()
+                current = connection.execute("SELECT subscribed FROM users WHERE telegram_id = ?", (telegram_id,)).fetchone()
+                next_value = not bool(current["subscribed"]) if current else True
+                connection.execute("UPDATE users SET subscribed = ?, updated_at = ? WHERE telegram_id = ?", (int(next_value), utc_now(), telegram_id))
+                connection.commit()
+                user = connection.execute("SELECT * FROM users WHERE telegram_id = ?", (telegram_id,)).fetchone()
+                connection.close()
+                telegram("answerCallbackQuery", {"callback_query_id": callback["id"], "text": "Уведомления включены" if next_value else "Уведомления выключены"})
+                telegram("editMessageReplyMarkup", {"chat_id": telegram_id, "message_id": callback["message"]["message_id"], "reply_markup": settings_keyboard(user)})
+            elif store in STORE_NAMES:
                 connection = db()
                 connection.execute(f"UPDATE users SET {store} = 1 - {store}, updated_at = ? WHERE telegram_id = ?", (utc_now(), telegram_id))
                 connection.commit()
